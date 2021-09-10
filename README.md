@@ -8,7 +8,6 @@
 ## components
  
  - sqlite CRxD
- - dnsmasq CRxD
+ - dnsmasq CxxD
  - web CRUD
- - dnsmasq process signal
  - read ENV vars for config

@@ -19,9 +19,9 @@ func InitDnsmasq(configDir string) error {
 	// - if not existant create dnsmasq dir
 	// - check writeablity to each dnsmasq dir
 	dnsmasq = &Dnsmasq{
-		dhcpOptionsDir: path.Join(configDir, "domains", "hosts"),
-		dhcpHostsDir:   path.Join(configDir, "domains", "dhcp-options"),
-		hostsDir:       path.Join(configDir, "domains", "dhcp-hosts"),
+		dhcpOptionsDir: path.Join(configDir, "domains", "dhcp-options"),
+		dhcpHostsDir:   path.Join(configDir, "domains", "dhcp-hosts"),
+		hostsDir:       path.Join(configDir, "domains", "hosts"),
 	}
 	err := os.MkdirAll(dnsmasq.dhcpOptionsDir, os.ModePerm)
 	if err != nil {

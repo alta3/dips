@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = dnsmasq.InitDnsmasq("./dnsmasq.d")
+	err = dnsmasq.InitDnsmasq("/etc/dnsmasq.d")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,14 +30,4 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	//for _, h := range hosts {
-	//	err = dnsmasq.DeleteDomainConfig(h)
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	err = dnsmasq.DeleteHostConfigs(h)
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//}
 }
