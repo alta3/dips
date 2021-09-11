@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"dips.alta3.com/models"
+	"dips/models"
 )
 
 func CreateHostConfigs(h models.Host) error {
@@ -14,6 +14,7 @@ func CreateHostConfigs(h models.Host) error {
 	if err != nil {
 		return err
 	}
+	defer hostsFile.Close()
 
 	hostsTemplateString := "{{ .IP }} {{ .Hostname }}.{{.Domain}}"
 	hostsTemplate, err := template.New("hosts").Parse(hostsTemplateString)
@@ -31,6 +32,7 @@ func CreateHostConfigs(h models.Host) error {
 	if err != nil {
 		return err
 	}
+	defer dhcpHostsFile.Close()
 
 	dhcpHostsTemplateString := "{{ .MAC }},set:{{ .Domain }},{{ .IP }},{{ .Hostname }}.{{.Domain}}"
 	dhcpHostsTemplate, err := template.New("dhcp_hosts").Parse(dhcpHostsTemplateString)

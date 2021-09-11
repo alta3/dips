@@ -5,7 +5,8 @@ import (
 	"os"
 	"path"
 
-	"dips.alta3.com/models"
+	"dips/models"
+
 	"github.com/lithammer/dedent"
 )
 
@@ -16,6 +17,7 @@ func CreateDomainConfig(h models.Host) error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	DomainTemplate := dedent.Dedent(`
                               # Managed by DIPS

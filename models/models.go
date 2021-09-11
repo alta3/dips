@@ -1,180 +1,75 @@
 package models
 
 import (
-	"database/sql"
 	"encoding/binary"
-	"log"
+	"encoding/hex"
+	"encoding/json"
+	"math/rand"
 	"net"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *sql.DB
-
-func InitDB(dataSource string) error {
-	var err error
-	db, err = sql.Open("sqlite3", dataSource)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return db.Ping()
+type FQDN struct {
+	Hostname string `json:"hostname"`
+	Domain   string `json:"domain"`
 }
 
 type Host struct {
-	MAC       net.HardwareAddr
-	IP        net.IP
-	Hostname  string
-	Domain    string
-	Gateway   net.IP
-	Network   net.IPNet
-	Requestor string
+	MAC       net.HardwareAddr `json:"mac"`
+	IP        net.IP           `json:"ip"`
+	Gateway   net.IP           `json:"gateway"`
+	Network   net.IPNet        `json:"network"`
+	Requestor string           `json:"requestor"`
+	FQDN
 }
 
-// db native storage types (row)
-type dbHost struct {
-	MAC     uint64
-	IP      uint32
-	Gateway uint32
-	Network string
-	Host
-}
-
-func intToHardwareAddr(n uint64) net.HardwareAddr {
-	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, n)
-	return net.HardwareAddr(b[2:])
-}
-
-func hardwareAddrToInt(mac net.HardwareAddr) uint64 {
-	b := make([]byte, 8)
-	copy(b[2:], mac)
-	return binary.BigEndian.Uint64(b)
-}
-
-func intToIP(n uint32) net.IP {
-	ip := make(net.IP, 4)
-	binary.BigEndian.PutUint32(ip, n)
-	return ip
-}
-
-func ipToInt(ip net.IP) uint32 {
-	return binary.BigEndian.Uint32(ip)
-}
-
-func stringToIPNet(network string) (*net.IPNet, error) {
-	_, ipv4net, err := net.ParseCIDR(network)
-	if err != nil {
-		return nil, err
-	}
-	return ipv4net, nil
-}
-
-func marshallHost(dh dbHost) (*Host, error) {
-	network, err := stringToIPNet(dh.Network)
-	if err != nil {
-		return nil, err
-	}
-	h := Host{
-		MAC:       intToHardwareAddr(dh.MAC),
-		IP:        intToIP(dh.IP),
-		Hostname:  dh.Hostname,
-		Domain:    dh.Domain,
-		Gateway:   intToIP(dh.Gateway),
-		Network:   *network,
-		Requestor: dh.Requestor,
-	}
-	return &h, nil
-}
-
-func unmarshallHost(h Host) (*dbHost, error) {
-	dh := dbHost{
-		MAC:     hardwareAddrToInt(h.MAC),
-		IP:      ipToInt(h.IP),
-		Gateway: ipToInt(h.Gateway),
+func (h *Host) MarshalJSON() ([]byte, error) {
+	type Alias Host
+	return json.Marshal(&struct {
+		MAC     string `json:"mac"`
+		Network string `json:"network"`
+		*Alias
+	}{
+		MAC:     h.MAC.String(),
 		Network: h.Network.String(),
-		Host: Host{
-			Hostname:  h.Hostname,
-			Domain:    h.Domain,
-			Requestor: h.Requestor,
-		},
-	}
-	return &dh, nil
+		Alias:   (*Alias)(h),
+	})
 }
 
-func AllHosts() ([]Host, error) {
-	rows, err := db.Query("SELECT * from host")
+func ipToDecnetMAC(ip net.IP) net.HardwareAddr {
+	localOUI, _ := hex.DecodeString("AAA3A3")
+	return net.HardwareAddr(append(localOUI, ip[1:]...))
+}
+
+func RandomIPInNet(network net.IPNet) (net.IP, error) {
+	mask := binary.BigEndian.Uint32(network.Mask)
+	start := binary.BigEndian.Uint32(network.IP)
+	finish := (start & mask) | (mask ^ 0xffffffff)
+
+	randIPInt := rand.Intn(int(finish-start+1)) + int(start)
+	ip := make(net.IP, 4)
+	binary.BigEndian.PutUint32(ip, uint32(randIPInt))
+	return ip, nil
+}
+
+func CreateHost(fqdn FQDN) (*Host, error) {
+	// TODO:
+	// - error handling
+	// - read from config
+	_, alphaNet, _ := net.ParseCIDR("10.0.0.0/12")
+	alphaGateway := net.ParseIP("10.0.0.1")
+	ip, _ := RandomIPInNet(*alphaNet)
+	mac := ipToDecnetMAC(ip)
+	h := &Host{
+		MAC:     mac,
+		IP:      ip,
+		Gateway: alphaGateway,
+		Network: *alphaNet,
+		FQDN:    fqdn,
+	}
+	//log.Println(h)
+	err := insertHost(*h)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var hosts []Host
-	for rows.Next() {
-		var dh dbHost
-		err := rows.Scan(&dh.MAC, &dh.IP, &dh.Hostname, &dh.Domain,
-			&dh.Gateway, &dh.Network, &dh.Requestor)
-		if err != nil {
-			return nil, err
-		}
-		h, err := marshallHost(dh)
-		if err != nil {
-			return nil, err
-		}
-		hosts = append(hosts, *h)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	return hosts, nil
-}
-
-func InsertHost(h Host) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	stmt, err := tx.Prepare(`INSERT into host(
-                                     mac, ip, hostname, domain, gateway, 
-				     network, requestor) values 
-				     (?, ?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	dh, err := unmarshallHost(h)
-	if err != nil {
-		return err
-	}
-	_, err = stmt.Exec(
-		dh.MAC, dh.IP, dh.Hostname,
-		dh.Domain, dh.Gateway,
-		dh.Network, dh.Requestor)
-	if err != nil {
-		return err
-	}
-	return tx.Commit()
-}
-
-func DeleteHost(h Host) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	stmt, err := tx.Prepare(`DELETE from host where hostname = ? and domain = ?`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	if err != nil {
-		return err
-	}
-	_, err = stmt.Exec(h.Hostname, h.Domain)
-	if err != nil {
-		return err
-	}
-	return tx.Commit()
+	return h, nil
 }
