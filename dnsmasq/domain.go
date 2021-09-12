@@ -10,7 +10,7 @@ import (
 	"github.com/lithammer/dedent"
 )
 
-func CreateDomainConfig(h models.Host) error {
+func createDomainConfig(h *models.Host) error {
 	domainConfigPath := path.Join(dnsmasq.dhcpOptionsDir, h.Domain)
 
 	f, err := os.OpenFile(domainConfigPath, os.O_RDWR|os.O_CREATE, 0755)
@@ -36,7 +36,7 @@ func CreateDomainConfig(h models.Host) error {
 	return nil
 }
 
-func DeleteDomainConfig(h models.Host) error {
+func deleteDomainConfig(h *models.Host) error {
 	domainConfigPath := path.Join(dnsmasq.dhcpOptionsDir, h.Domain)
 	if _, err := os.Stat(domainConfigPath); os.IsNotExist(err) {
 		return nil // already gone

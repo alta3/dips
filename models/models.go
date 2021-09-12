@@ -71,5 +71,6 @@ func CreateHost(fqdn FQDN) (*Host, error) {
 	if err != nil {
 		return nil, err
 	}
+	go func() { newHostsChan <- *h }() // InitDB
 	return h, nil
 }

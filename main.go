@@ -15,29 +15,13 @@ func init() {
 }
 
 func main() {
-	err := models.InitDB("./dips.db")
+	newHostsChan, err := dnsmasq.InitDnsmasq("./dnsmasq.d")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = dnsmasq.InitDnsmasq("/etc/dnsmasq.d")
+	err = models.InitDB("./dips.db", newHostsChan)
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	// Move to InitDnsmasqConfig
-	hosts, err := models.AllHosts()
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, h := range hosts {
-		err = dnsmasq.CreateDomainConfig(h)
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = dnsmasq.CreateHostConfigs(h)
-		if err != nil {
-			log.Fatal(err)
-		}
 	}
 
 	server := web.InitApp()

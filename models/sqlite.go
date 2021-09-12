@@ -11,9 +11,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// TODO combine into a struct
 var db *sql.DB
+var newHostsChan chan<- Host
 
-func InitDB(dataSource string) error {
+func InitDB(dataSource string, nHC chan<- Host) error {
+	newHostsChan = nHC
 	var err error
 	db, err = sql.Open("sqlite3", dataSource)
 	if err != nil {
@@ -103,14 +106,14 @@ func unmarshallHost(h Host) (*dbHost, error) {
 	return &dh, nil
 }
 
-func AllHosts() ([]Host, error) {
+func AllHosts() ([]*Host, error) {
 	rows, err := db.Query("SELECT * from host")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var hosts []Host
+	var hosts []*Host
 	for rows.Next() {
 		var dh dbHost
 		err := rows.Scan(&dh.MAC, &dh.IP, &dh.Hostname, &dh.Domain,
@@ -122,7 +125,7 @@ func AllHosts() ([]Host, error) {
 		if err != nil {
 			return nil, err
 		}
-		hosts = append(hosts, *h)
+		hosts = append(hosts, h)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err

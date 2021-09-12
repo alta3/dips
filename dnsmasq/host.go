@@ -8,7 +8,7 @@ import (
 	"dips/models"
 )
 
-func CreateHostConfigs(h models.Host) error {
+func createHostConfigs(h *models.Host) error {
 	hostsConfigPath := path.Join(dnsmasq.hostsDir, h.Hostname+"."+h.Domain)
 	hostsFile, err := os.OpenFile(hostsConfigPath, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
@@ -47,7 +47,7 @@ func CreateHostConfigs(h models.Host) error {
 	return nil
 }
 
-func DeleteHostConfigs(h models.Host) error {
+func deleteHostConfigs(h *models.Host) error {
 	hostsConfigPath := path.Join(dnsmasq.hostsDir, h.Hostname+"."+h.Domain)
 	if _, err := os.Stat(hostsConfigPath); os.IsNotExist(err) {
 		return nil // already gone
