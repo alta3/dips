@@ -1,3 +1,6 @@
+#### Current Steps
+https://github.com/alta3/labs/blob/main/courses/cloud-build/dips.md
+
 # Setup
 
 - golang 1.17
