@@ -15,7 +15,7 @@ func init() {
 }
 
 func main() {
-	newHostsChan, err := dnsmasq.InitDnsmasq("./dnsmasq.d")
+	newHostsChan, err := dnsmasq.InitDnsmasq("/etc/dnsmasq.d")
 	if err != nil {
 		log.Fatal(err)
 	}
