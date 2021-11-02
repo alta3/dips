@@ -13,4 +13,5 @@ https://github.com/alta3/labs/blob/main/courses/cloud-build/dips.md
  - sqlite CRxD
  - dnsmasq CxxD
  - web CRUD
+ - sqlite -> chan -> dnsmasq (CxxD)
  - read ENV vars for config
