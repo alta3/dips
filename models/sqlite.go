@@ -22,6 +22,28 @@ func InitDB(dataSource string, nHC chan<- Host) error {
 	if err != nil {
 		log.Fatal(err)
 	}
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS host (
+            mac INTEGER NOT NULL,
+            ip INTEGER NOT NULL,
+            hostname TEXT NOT NULL,
+            domain TEXT NOT NULL,
+            gateway INTEGER NOT NULL,
+            network TEXT NOT NULL,
+            requestor TEXT NOT NULL,
+        
+            UNIQUE(mac),
+            UNIQUE(ip),
+            UNIQUE(hostname, domain)
+            --FOREIGN KEY (requestor) REFERENCES requestor(name)
+        )`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS requestor (
+            name TEXT PRIMARY KEY,
+            api_key TEXT NOT NULL,
+            UNIQUE(api_key)
+        )`)
 	return db.Ping()
 }
 
