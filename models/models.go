@@ -40,6 +40,7 @@ func ipToDecnetMAC(ip net.IP) net.HardwareAddr {
 	return net.HardwareAddr(append(localOUI, ip[1:]...))
 }
 
+// TODO use start and end range
 func RandomIPInNet(network net.IPNet) (net.IP, error) {
 	mask := binary.BigEndian.Uint32(network.Mask)
 	start := binary.BigEndian.Uint32(network.IP)
@@ -51,12 +52,11 @@ func RandomIPInNet(network net.IPNet) (net.IP, error) {
 	return ip, nil
 }
 
-func CreateHost(fqdn FQDN) (*Host, error) {
+func CreateHost(fqdn FQDN, network string, gateway string) (*Host, error) {
 	// TODO:
 	// - error handling
-	// - read from config
-	_, alphaNet, _ := net.ParseCIDR("10.0.0.0/12")
-	alphaGateway := net.ParseIP("10.0.0.1")
+	_, alphaNet, _ := net.ParseCIDR(network)
+	alphaGateway := net.ParseIP(gateway)
 	ip, _ := RandomIPInNet(*alphaNet)
 	mac := ipToDecnetMAC(ip)
 	h := &Host{

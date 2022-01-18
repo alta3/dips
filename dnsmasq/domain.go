@@ -11,7 +11,7 @@ import (
 )
 
 func createDomainConfig(h *models.Host) error {
-	domainConfigPath := path.Join(dnsmasq.dhcpOptionsDir, h.Domain)
+	domainConfigPath := path.Join(conf.DhcpOptionsDir, h.Domain)
 
 	f, err := os.OpenFile(domainConfigPath, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
@@ -37,7 +37,7 @@ func createDomainConfig(h *models.Host) error {
 }
 
 func deleteDomainConfig(h *models.Host) error {
-	domainConfigPath := path.Join(dnsmasq.dhcpOptionsDir, h.Domain)
+	domainConfigPath := path.Join(conf.DhcpOptionsDir, h.Domain)
 	if _, err := os.Stat(domainConfigPath); os.IsNotExist(err) {
 		return nil // already gone
 	}

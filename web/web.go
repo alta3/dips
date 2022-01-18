@@ -1,29 +1,30 @@
 package web
 
 import (
-	"context"
 	"net/http"
 	"os"
-
-	"dips/models"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
-type HostService interface {
-	FindHostByFQDN(ctx context.Context, hostname string, domain string) (*models.Host, error)
-	CreateHost(ctx context.Context, host *models.Host) error
-	DeleateHost(ctx context.Context, host *models.Host) error
+type Config struct {
+	Network string  // 10.0.0.0/12
+	Gateway string  // 10.0.0.1
+	DhcpStartAddress string // 10.0.2.1
+	DhcpEndAddress  string // 10.15.255.254
+	DhcpLease string // 8h
+	ListenIP string // 0.0.0.0
+	ListenPort string //8001
 }
 
-func InitApp() *http.Server {
+var conf Config
+
+func InitApp(c Config) *mux.Router {
+	conf = c
 	r := mux.NewRouter()
 	initRoutes(r)
-	return &http.Server{
-		Handler: r,
-		Addr:    "0.0.0.0:8001",
-	}
+	return r
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {

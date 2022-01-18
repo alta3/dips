@@ -29,7 +29,7 @@ func CreateHostHandler() http.HandlerFunc {
 			return
 		}
 
-		host, err := models.CreateHost(fqdn)
+		host, err := models.CreateHost(fqdn, conf.Network, conf.Gateway)
 		if err != nil {
 			log.Printf("Cannot create new Host. err=%v \n", err)
 			w.Header().Add("Content-Type", "application/json")

@@ -4,43 +4,37 @@ import (
 	"dips/models"
 	"log"
 	"os"
-	"path"
 )
 
-type Dnsmasq struct {
-	dhcpOptionsDir string
-	dhcpHostsDir   string
-	hostsDir       string
-	newHostsChan   chan models.Host
+type Config struct {
+	DhcpOptionsDir string
+	DhcpHostsDir   string
+	HostsDir       string
+	NewHostsChan   chan models.Host
 }
 
-var dnsmasq *Dnsmasq
+var conf Config
 
-func InitDnsmasq(configDir string) (chan<- models.Host, error) {
+func InitDnsmasq(c Config) (error) {
 	// todo
 	// - check existence of configDir
 	// - if not existant create dnsmasq dir
 	// - check writeablity to each dnsmasq dir
-	dnsmasq = &Dnsmasq{
-		dhcpOptionsDir: path.Join(configDir, "domains", "dhcp-options"),
-		dhcpHostsDir:   path.Join(configDir, "domains", "dhcp-hosts"),
-		hostsDir:       path.Join(configDir, "domains", "hosts"),
-		newHostsChan:   make(chan models.Host),
-	}
-	err := os.MkdirAll(dnsmasq.dhcpOptionsDir, os.ModePerm)
+	conf = c
+	err := os.MkdirAll(conf.DhcpOptionsDir, os.ModePerm)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = os.MkdirAll(dnsmasq.dhcpHostsDir, os.ModePerm)
+	err = os.MkdirAll(conf.DhcpHostsDir, os.ModePerm)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = os.MkdirAll(dnsmasq.hostsDir, os.ModePerm)
+	err = os.MkdirAll(conf.HostsDir, os.ModePerm)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	go CreateNewHosts(dnsmasq.newHostsChan)
-	return dnsmasq.newHostsChan, nil
+	go CreateNewHosts(conf.NewHostsChan)
+	return nil
 }
 
 func CreateNewHosts(newHostsChan <-chan models.Host) {

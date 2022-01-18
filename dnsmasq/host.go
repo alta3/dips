@@ -9,7 +9,7 @@ import (
 )
 
 func createHostConfigs(h *models.Host) error {
-	hostsConfigPath := path.Join(dnsmasq.hostsDir, h.Hostname+"."+h.Domain)
+	hostsConfigPath := path.Join(conf.HostsDir, h.Hostname+"."+h.Domain)
 	hostsFile, err := os.OpenFile(hostsConfigPath, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		return err
@@ -27,7 +27,7 @@ func createHostConfigs(h *models.Host) error {
 		return err
 	}
 
-	dhcpHostsConfigPath := path.Join(dnsmasq.dhcpHostsDir, h.Hostname+"."+h.Domain)
+	dhcpHostsConfigPath := path.Join(conf.DhcpHostsDir, h.Hostname+"."+h.Domain)
 	dhcpHostsFile, err := os.OpenFile(dhcpHostsConfigPath, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func createHostConfigs(h *models.Host) error {
 }
 
 func deleteHostConfigs(h *models.Host) error {
-	hostsConfigPath := path.Join(dnsmasq.hostsDir, h.Hostname+"."+h.Domain)
+	hostsConfigPath := path.Join(conf.HostsDir, h.Hostname+"."+h.Domain)
 	if _, err := os.Stat(hostsConfigPath); os.IsNotExist(err) {
 		return nil // already gone
 	}
@@ -56,7 +56,7 @@ func deleteHostConfigs(h *models.Host) error {
 	if err != nil {
 		return err
 	}
-	dhcpHostsConfigPath := path.Join(dnsmasq.dhcpHostsDir, h.Hostname+"."+h.Domain)
+	dhcpHostsConfigPath := path.Join(conf.DhcpHostsDir, h.Hostname+"."+h.Domain)
 	if _, err := os.Stat(dhcpHostsConfigPath); os.IsNotExist(err) {
 		return nil // already gone
 	}
