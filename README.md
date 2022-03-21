@@ -8,6 +8,9 @@ https://github.com/alta3/labs/blob/main/courses/cloud-build/dips.md
 
 # Details
 
+- `go build main.go`
+- `./main`
+
 ## components
  
  - sqlite CRxD
